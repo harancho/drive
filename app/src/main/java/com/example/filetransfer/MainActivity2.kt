@@ -54,7 +54,11 @@ class MainActivity2 : AppCompatActivity() {
             }
             else{
                 //write code here for passing the file
-                //filename_status.visibility = View.VISIBLE
+
+
+
+
+                //
 
                 val file_name = filename.getText().toString()
 
