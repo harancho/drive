@@ -1,24 +1,76 @@
 package com.example.filetransfer
 
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okio.BufferedSink
 import org.json.JSONException
 import org.json.JSONObject
-import org.w3c.dom.Text
-import java.io.IOException
+import java.io.*
 
-class MainActivity2 : AppCompatActivity() {
+@Throws(IOException::class)
+fun getBytes(inputStream: InputStream): ByteArray? {
+    val byteBuffer = ByteArrayOutputStream()
+    val bufferSize = 1024
+    val buffer = ByteArray(bufferSize)
+    var len = 0
+    while (inputStream.read(buffer).also { len = it } != -1) {
+        byteBuffer.write(buffer, 0, len)
+    }
+    return byteBuffer.toByteArray()
+}
 
-    lateinit var filepath : Uri
+class MainActivity2 : AppCompatActivity(){
+
+    lateinit var fileuri : Uri
+    lateinit var actual_filename : String
+
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if(requestCode == 109 && resultCode == RESULT_OK && data!=null){
+
+            fileuri = data.data!!
+            println(fileuri)
+
+            val cursor = contentResolver.query(fileuri, null, null, null, null)
+            cursor?.use {
+                it.moveToFirst()
+                actual_filename = cursor.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))     //name of the file
+                println(actual_filename)
+            }
+
+            val upload_button : Button = findViewById(R.id.button)
+            val cut_button : Button = findViewById(R.id.button3)
+            val image_selected : ImageView = findViewById(R.id.imageView)
+            val filename : EditText = findViewById(R.id.fileName)
+            val filename_status : TextView = findViewById(R.id.textView)
+
+            upload_button.text = "Upload"
+            cut_button.visibility = View.VISIBLE
+            filename.visibility = View.VISIBLE
+
+            filename_status.text = "File Selected"
+            filename_status.visibility = View.VISIBLE
+
+            image_selected.setImageURI(fileuri)
+            image_selected.visibility = View.VISIBLE
+
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +81,6 @@ class MainActivity2 : AppCompatActivity() {
         val image_selected : ImageView = findViewById(R.id.imageView)
         val filename : EditText = findViewById(R.id.fileName)
         val filename_status : TextView = findViewById(R.id.textView)
-
 
         cut_button.setOnClickListener {
             upload_button.text = "Select File"
@@ -46,26 +97,29 @@ class MainActivity2 : AppCompatActivity() {
                 var i = Intent()
                 i.setType("image/*")
                 i.setAction(Intent.ACTION_GET_CONTENT)
-                startActivityForResult(Intent.createChooser(i, "Choose Picture"), 111)
+                startActivityForResult(Intent.createChooser(i, "Choose Picture"), 109)
             }
             else if(filename.getText().toString() == ""){
                 filename_status.text = "Enter Filename First!"
-                //filename_status.visibility = View.VISIBLE
+
             }
             else{
-                //write code here for passing the file
-
-
-
-
-                //
 
                 val file_name = filename.getText().toString()
+                val url = "http://41483a7a2543.ngrok.io/upload"
 
-                val url = "http://052c5bec0670.ngrok.io"
-                val formBody = FormBody.Builder()
-                    .add("filename", file_name)
-                    .build();
+                val MEDIA_TYPE = "image/*".toMediaType()
+
+                val iStream = contentResolver.openInputStream(fileuri)
+                val inputData = getBytes(iStream!!)
+
+                val formBody = inputData?.let { it1 -> RequestBody.create(MEDIA_TYPE, it1) }?.let { it2 ->
+                    MultipartBody.Builder().setType(MultipartBody.FORM)
+                            .addFormDataPart("file", file_name, it2)
+                            .addFormDataPart("actual_file_name" , actual_filename )
+                            .addFormDataPart("user_file_name", file_name)
+                            .build()
+                };
 
                 val request = Request.Builder().method("POST", formBody).url(url).build()
 
@@ -78,23 +132,22 @@ class MainActivity2 : AppCompatActivity() {
                             val json = JSONObject(body)
                             println(json.getString("result"))
 
-                            if(json.getString("result") == "Filename alteady exists"){
-                                runOnUiThread{
+                            if (json.getString("result") == "Filename alteady exists") {
+                                runOnUiThread {
                                     filename_status.text = json.getString("result")
                                     upload_button.visibility = View.VISIBLE
                                     cut_button.visibility = View.VISIBLE
                                     image_selected.visibility = View.VISIBLE
                                     filename.visibility = View.VISIBLE
                                 }
-                            }
-                            else{
+                            } else {
                                 runOnUiThread {
                                     filename_status.text = json.getString("result")
                                     upload_button.visibility = View.VISIBLE
                                     upload_button.text = "Select File"
                                 }
                             }
-                        }catch(e : JSONException){
+                        } catch (e: JSONException) {
                             runOnUiThread {
                                 filename_status.text = "Please check your Internet or Server is down"
                                 upload_button.visibility = View.VISIBLE
@@ -121,36 +174,5 @@ class MainActivity2 : AppCompatActivity() {
             }
         }
 
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if(requestCode == 111 && resultCode == Activity.RESULT_OK && data!=null){
-
-            filepath = data.data!!
-            println(filepath)
-
-            val upload_button : Button = findViewById(R.id.button)
-            val cut_button : Button = findViewById(R.id.button3)
-            val image_selected : ImageView = findViewById(R.id.imageView)
-            val filename : EditText = findViewById(R.id.fileName)
-            val filename_status : TextView = findViewById(R.id.textView)
-
-            upload_button.text = "Upload"
-            cut_button.visibility = View.VISIBLE
-            filename.visibility = View.VISIBLE
-
-            filename_status.text = "File Selected"
-            filename_status.visibility = View.VISIBLE
-
-//            var Bitmap = MediaStore.Images.Media.getBitmap(contentResolver,filepath)                 for actual file
-//            image_selected.setImageBitmap(Bitmap)
-
-            image_selected.setImageURI(filepath)
-            image_selected.visibility = View.VISIBLE
-
-
-        }
     }
 }

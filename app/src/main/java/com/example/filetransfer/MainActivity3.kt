@@ -29,7 +29,7 @@ class MainActivity3 : AppCompatActivity() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mobileArray)
         list.adapter = adapter
 
-        val url = "http://052c5bec0670.ngrok.io/filenames"
+        val url = "http://41483a7a2543.ngrok.io/filenames"
         val formBody = FormBody.Builder()
             .build();
         val request = Request.Builder().method("POST", formBody).url(url).build()
@@ -74,18 +74,7 @@ class MainActivity3 : AppCompatActivity() {
                 println(e)
             }
         })
-        //
 
-
-//        var mobileArray = mutableListOf(
-//            "Android", "IPhone", "WindowsMobile", "Blackberry",
-//            "WebOS", "Ubuntu", "Windows7", "Max OS X","a","b","c"
-//        )
-//        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mobileArray)
-//        list.adapter = adapter
-//
-//        mobileArray.add("New Item");
-//        adapter.notifyDataSetChanged();
 
         download_button.setOnClickListener {
             if(download_button.text == "Select File"){
