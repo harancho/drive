@@ -29,12 +29,13 @@ class MainActivity3 : AppCompatActivity() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mobileArray)
         list.adapter = adapter
 
-        val url = "http://41483a7a2543.ngrok.io/filenames"
+        val url = "http://bff3eb5cee8f.ngrok.io/filenames"
         val formBody = FormBody.Builder()
             .build();
         val request = Request.Builder().method("POST", formBody).url(url).build()
 
         val client = OkHttpClient()
+
         client.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val body = response?.body?.string()
@@ -64,13 +65,17 @@ class MainActivity3 : AppCompatActivity() {
 
                     runOnUiThread {
                         println(e)
-                        filename_status.text = "Please check your Internet or Server is down"
+                        filename_status.text = "Server is down, Please try later!"
                     }
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
                 println("Failed to execute request!")
+                runOnUiThread {
+                    val filename_status : TextView = findViewById(R.id.textView3)
+                    filename_status.text = "Please check your Internet and try again!"
+                }
                 println(e)
             }
         })

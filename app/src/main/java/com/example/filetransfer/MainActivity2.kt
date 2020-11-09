@@ -14,11 +14,13 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okio.BufferedSink
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.*
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.util.concurrent.TimeUnit
+
 
 @Throws(IOException::class)
 fun getBytes(inputStream: InputStream): ByteArray? {
@@ -36,6 +38,7 @@ class MainActivity2 : AppCompatActivity(){
 
     lateinit var fileuri : Uri
     lateinit var actual_filename : String
+    var actual_size : Int = 0
 
     @RequiresApi(Build.VERSION_CODES.KITKAT)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -46,28 +49,33 @@ class MainActivity2 : AppCompatActivity(){
             fileuri = data.data!!
             println(fileuri)
 
-            val cursor = contentResolver.query(fileuri, null, null, null, null)
-            cursor?.use {
-                it.moveToFirst()
-                actual_filename = cursor.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))     //name of the file
-                println(actual_filename)
-            }
-
             val upload_button : Button = findViewById(R.id.button)
             val cut_button : Button = findViewById(R.id.button3)
             val image_selected : ImageView = findViewById(R.id.imageView)
             val filename : EditText = findViewById(R.id.fileName)
             val filename_status : TextView = findViewById(R.id.textView)
+            val file_size_status : TextView = findViewById(R.id.textView4)
 
-            upload_button.text = "Upload"
-            cut_button.visibility = View.VISIBLE
-            filename.visibility = View.VISIBLE
+            val cursor = contentResolver.query(fileuri, null, null, null, null)
+            cursor?.use {
+                it.moveToFirst()
+                actual_filename = cursor.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))     //name of the file
+                actual_size = cursor.getInt(it.getColumnIndex(OpenableColumns.SIZE))
+                println(actual_size)
+                println(actual_filename)
+            }
 
-            filename_status.text = "File Selected"
-            filename_status.visibility = View.VISIBLE
-
-            image_selected.setImageURI(fileuri)
-            image_selected.visibility = View.VISIBLE
+            if(actual_size <5000000){
+                image_selected.setImageURI(fileuri)
+                image_selected.visibility = View.VISIBLE
+                filename_status.text = "File Selected"
+                cut_button.visibility = View.VISIBLE
+                upload_button.text = "Upload"
+                filename.visibility = View.VISIBLE
+                filename_status.visibility = View.VISIBLE
+            }else{
+                file_size_status.visibility = View.VISIBLE
+            }
 
         }
     }
@@ -81,6 +89,7 @@ class MainActivity2 : AppCompatActivity(){
         val image_selected : ImageView = findViewById(R.id.imageView)
         val filename : EditText = findViewById(R.id.fileName)
         val filename_status : TextView = findViewById(R.id.textView)
+        val file_size_status : TextView = findViewById(R.id.textView4)
 
         cut_button.setOnClickListener {
             upload_button.text = "Select File"
@@ -89,24 +98,26 @@ class MainActivity2 : AppCompatActivity(){
             filename.visibility = View.INVISIBLE
             filename.setText("")
             filename_status.visibility = View.INVISIBLE
+            file_size_status.visibility = View.INVISIBLE
         }
 
         upload_button.setOnClickListener{
+            file_size_status.visibility = View.INVISIBLE
             if(upload_button.text != "Upload"){
-
                 var i = Intent()
                 i.setType("image/*")
                 i.setAction(Intent.ACTION_GET_CONTENT)
                 startActivityForResult(Intent.createChooser(i, "Choose Picture"), 109)
             }
             else if(filename.getText().toString() == ""){
+                file_size_status.visibility = View.INVISIBLE
                 filename_status.text = "Enter Filename First!"
 
             }
             else{
 
                 val file_name = filename.getText().toString()
-                val url = "http://41483a7a2543.ngrok.io/upload"
+                val url = "http://bff3eb5cee8f.ngrok.io/upload"
 
                 val MEDIA_TYPE = "image/*".toMediaType()
 
@@ -116,7 +127,7 @@ class MainActivity2 : AppCompatActivity(){
                 val formBody = inputData?.let { it1 -> RequestBody.create(MEDIA_TYPE, it1) }?.let { it2 ->
                     MultipartBody.Builder().setType(MultipartBody.FORM)
                             .addFormDataPart("file", file_name, it2)
-                            .addFormDataPart("actual_file_name" , actual_filename )
+                            .addFormDataPart("actual_file_name", actual_filename)
                             .addFormDataPart("user_file_name", file_name)
                             .build()
                 };
@@ -124,7 +135,14 @@ class MainActivity2 : AppCompatActivity(){
                 val request = Request.Builder().method("POST", formBody).url(url).build()
 
                 val client = OkHttpClient()
-                client.newCall(request).enqueue(object : Callback {
+
+                val slowClient = client.newBuilder()
+                        .readTimeout(1, TimeUnit.MINUTES)
+                        .connectTimeout(1,TimeUnit.MINUTES)
+                        .writeTimeout(1, TimeUnit.MINUTES)
+                        .build()
+
+                slowClient.newCall(request).enqueue(object : Callback {
                     override fun onResponse(call: Call, response: Response) {
                         val body = response?.body?.string()
 
@@ -142,6 +160,7 @@ class MainActivity2 : AppCompatActivity(){
                                 }
                             } else {
                                 runOnUiThread {
+                                    file_size_status.visibility = View.INVISIBLE
                                     filename_status.text = json.getString("result")
                                     upload_button.visibility = View.VISIBLE
                                     upload_button.text = "Select File"
@@ -149,11 +168,12 @@ class MainActivity2 : AppCompatActivity(){
                             }
                         } catch (e: JSONException) {
                             runOnUiThread {
-                                filename_status.text = "Please check your Internet or Server is down"
+                                filename_status.text = "Server is down, Please try later!"
                                 upload_button.visibility = View.VISIBLE
                                 cut_button.visibility = View.VISIBLE
                                 image_selected.visibility = View.VISIBLE
                                 filename.visibility = View.VISIBLE
+                                file_size_status.visibility = View.INVISIBLE
                             }
                         }
                     }
@@ -161,6 +181,16 @@ class MainActivity2 : AppCompatActivity(){
                     override fun onFailure(call: Call, e: IOException) {
                         println("Failed to execute request!")
                         println(e)
+                        runOnUiThread {
+                            filename_status.text = ""
+                            file_size_status.visibility = View.VISIBLE
+                            file_size_status.text = "Please check your Internet and try again!"
+                            upload_button.visibility = View.VISIBLE
+                            cut_button.visibility = View.VISIBLE
+                            image_selected.visibility = View.VISIBLE
+                            filename.visibility = View.VISIBLE
+                        }
+
                     }
                 })
 
@@ -170,6 +200,7 @@ class MainActivity2 : AppCompatActivity(){
                 filename.visibility = View.INVISIBLE
                 filename.setText("")
                 upload_button.visibility = View.INVISIBLE
+                file_size_status.visibility = View.INVISIBLE
                 //
             }
         }
