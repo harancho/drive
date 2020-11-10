@@ -117,7 +117,7 @@ class MainActivity2 : AppCompatActivity(){
             else{
 
                 val file_name = filename.getText().toString()
-                val url = "http://bff3eb5cee8f.ngrok.io/upload"
+                val url = "http://7051140d112a.ngrok.io/upload"
 
                 val MEDIA_TYPE = "image/*".toMediaType()
 
@@ -144,6 +144,7 @@ class MainActivity2 : AppCompatActivity(){
 
                 slowClient.newCall(request).enqueue(object : Callback {
                     override fun onResponse(call: Call, response: Response) {
+
                         val body = response?.body?.string()
 
                         try {
@@ -194,7 +195,7 @@ class MainActivity2 : AppCompatActivity(){
                     }
                 })
 
-                filename_status.text = "LOADING..."
+                filename_status.text = "UPLOADING..."
                 cut_button.visibility = View.INVISIBLE
                 image_selected.visibility = View.INVISIBLE
                 filename.visibility = View.INVISIBLE
