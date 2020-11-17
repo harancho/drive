@@ -1,5 +1,9 @@
 package com.example.filetransfer
 
+import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -12,27 +16,88 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import kotlin.math.log
+import kotlin.system.exitProcess
 
 class MainActivity3 : AppCompatActivity() {
     var filename2 : String = ""
+
+    override fun onBackPressed() {
+        println("hello")
+
+        val builder: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity3)
+        builder.setMessage("Do you want to exit ?");
+        builder.setTitle("Alert !");
+        builder.setCancelable(false);
+
+        builder.setPositiveButton("Yes") { dialog, which ->
+            finishAffinity();
+            exitProcess(0);
+        }
+
+        builder.setNegativeButton("No") { dialog, which -> dialog.cancel()
+        }
+
+        val alertDialog = builder.create()
+        alertDialog.show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main3)
 
+        val user : TextView = findViewById(R.id.textView7)
+        val upload_button : Button = findViewById(R.id.button12)
+        val logout_button : Button = findViewById(R.id.button11)
         val download_button : Button = findViewById(R.id.button4)
         val filename_status : TextView = findViewById(R.id.textView3)
         val list :ListView = findViewById(R.id.listView)
         val heading : TextView = findViewById(R.id.textView2)
         val testing_image : ImageView = findViewById(R.id.imageView2)
 
+        upload_button.setOnClickListener {
+            val intent = Intent(this, MainActivity4::class.java)
+            startActivity(intent)
+        }
+
+        logout_button.setOnClickListener {
+            val builder: android.app.AlertDialog.Builder = android.app.AlertDialog.Builder(this@MainActivity3 )
+            builder.setMessage("Do you want to logout ?");
+            builder.setTitle("Alert !");
+            builder.setCancelable(false);
+
+            builder.setPositiveButton("Yes") { dialog, which ->
+                val sharedPreferences : SharedPreferences = getSharedPreferences("myToken", Context.MODE_PRIVATE)
+                val editor : SharedPreferences.Editor = sharedPreferences.edit()
+                editor.remove("token")
+                editor.remove("username")
+                editor.commit()
+
+                println("byeeeee")
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+            }
+
+            builder.setNegativeButton("No") { dialog, which -> dialog.cancel()
+            }
+
+            val alertDialog = builder.create()
+            alertDialog.show()
+
+        }
+
+        val sp: SharedPreferences = getApplicationContext().getSharedPreferences("myToken" , Context.MODE_PRIVATE)
+        user.text = sp.getString("username" , "").toString()
+
         var mobileArray = mutableListOf<String>()
         var adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mobileArray)
         list.adapter = adapter
 
-        var url = "http://7051140d112a.ngrok.io/filenames"
+        var url = "http://0318185579a5.ngrok.io/filenames"
         var formBody = FormBody.Builder()
-            .build();
+                .add("username" , sp.getString("username", "").toString())
+                .add("token", sp.getString("token" ,"").toString())
+                .build();
         var request = Request.Builder().method("POST", formBody).url(url).build()
 
         var client = OkHttpClient()
@@ -99,9 +164,10 @@ class MainActivity3 : AppCompatActivity() {
                 filename2 = filename.text.toString()
                 // write code for downloading here
 
-                var url = "http://7051140d112a.ngrok.io/download"
+                var url = "http://0318185579a5.ngrok.io/download"
                 var formBody = FormBody.Builder()
                         .add("filename", filename_status.text.toString())
+                        .add("token", sp.getString("token","").toString())
                         .build();
                 var request = Request.Builder().method("POST", formBody).url(url).build()
 
@@ -119,6 +185,8 @@ class MainActivity3 : AppCompatActivity() {
                                 val bitmap: Bitmap = BitmapFactory.decodeByteArray(body, 0, body?.size?.toInt())
                                 testing_image.setImageBitmap(bitmap)
                                 testing_image.visibility = View.VISIBLE
+                                upload_button.visibility = View.VISIBLE
+                                logout_button.visibility = View.VISIBLE
                                 files.visibility = View.VISIBLE
                                 heading.visibility = View.VISIBLE
                                 download_button.text = "Select File"
@@ -146,6 +214,8 @@ class MainActivity3 : AppCompatActivity() {
                             } catch (e: NullPointerException) {
                                 println("Failed to execute request!")
                                 println(e)
+                                upload_button.visibility = View.VISIBLE
+                                logout_button.visibility = View.VISIBLE
                                 heading.visibility = View.VISIBLE
                                 files.visibility = View.VISIBLE
                                 download_button.visibility = View.VISIBLE
@@ -160,6 +230,8 @@ class MainActivity3 : AppCompatActivity() {
                         println("Failed to execute request!")
                         println(e)
                         runOnUiThread {
+                            logout_button.visibility = View.VISIBLE
+                            upload_button.visibility = View.VISIBLE
                             heading.visibility = View.VISIBLE
                             files.visibility = View.VISIBLE
                             download_button.visibility = View.VISIBLE
@@ -170,6 +242,9 @@ class MainActivity3 : AppCompatActivity() {
                     }
                 })
 
+                logout_button.visibility = View.INVISIBLE
+                upload_button.visibility = View.INVISIBLE
+                heading.text = "Available Files"
                 heading.visibility = View.INVISIBLE
                 files.visibility = View.INVISIBLE
                 download_button.visibility = View.INVISIBLE

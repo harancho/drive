@@ -1,6 +1,9 @@
 package com.example.filetransfer
 
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,6 +23,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
+import kotlin.system.exitProcess
 
 
 @Throws(IOException::class)
@@ -39,6 +43,26 @@ class MainActivity2 : AppCompatActivity(){
     lateinit var fileuri : Uri
     lateinit var actual_filename : String
     var actual_size : Int = 0
+
+    override fun onBackPressed() {
+        println("hello")
+
+        val builder: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity2)
+        builder.setMessage("Do you want to exit ?");
+        builder.setTitle("Alert !");
+        builder.setCancelable(false);
+
+        builder.setPositiveButton("Yes") { dialog, which ->
+            finishAffinity();
+            exitProcess(0);
+        }
+
+        builder.setNegativeButton("No") { dialog, which -> dialog.cancel()
+        }
+
+        val alertDialog = builder.create()
+        alertDialog.show()
+    }
 
     @RequiresApi(Build.VERSION_CODES.KITKAT)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -84,12 +108,49 @@ class MainActivity2 : AppCompatActivity(){
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
 
+        val user : TextView = findViewById(R.id.textView8)
+        val download_button : Button = findViewById(R.id.button13)
+        val logout_button : Button = findViewById(R.id.button10)
         val upload_button : Button = findViewById(R.id.button)
         val cut_button : Button = findViewById(R.id.button3)
         val image_selected : ImageView = findViewById(R.id.imageView)
         val filename : EditText = findViewById(R.id.fileName)
         val filename_status : TextView = findViewById(R.id.textView)
         val file_size_status : TextView = findViewById(R.id.textView4)
+
+        val sp: SharedPreferences = getApplicationContext().getSharedPreferences("myToken", Context.MODE_PRIVATE)
+        user.text = sp.getString("username", "").toString()
+
+        download_button.setOnClickListener {
+            var intent = Intent(this, MainActivity4::class.java)
+            startActivity(intent)
+        }
+
+        logout_button.setOnClickListener {
+            val builder: android.app.AlertDialog.Builder = android.app.AlertDialog.Builder(this@MainActivity2 )
+            builder.setMessage("Do you want to logout ?");
+            builder.setTitle("Alert !");
+            builder.setCancelable(false);
+
+            builder.setPositiveButton("Yes") { dialog, which ->
+                val sharedPreferences : SharedPreferences = getSharedPreferences("myToken", Context.MODE_PRIVATE)
+                val editor : SharedPreferences.Editor = sharedPreferences.edit()
+                editor.remove("token")
+                editor.remove("username")
+                editor.commit()
+
+                println("byeeeee")
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+            }
+
+            builder.setNegativeButton("No") { dialog, which -> dialog.cancel()
+            }
+
+            val alertDialog = builder.create()
+            alertDialog.show()
+
+        }
 
         cut_button.setOnClickListener {
             upload_button.text = "Select File"
@@ -117,18 +178,24 @@ class MainActivity2 : AppCompatActivity(){
             else{
 
                 val file_name = filename.getText().toString()
-                val url = "http://7051140d112a.ngrok.io/upload"
+                val url = "http://0318185579a5.ngrok.io/upload"
 
                 val MEDIA_TYPE = "image/*".toMediaType()
 
                 val iStream = contentResolver.openInputStream(fileuri)
                 val inputData = getBytes(iStream!!)
 
+                val sp: SharedPreferences = getApplicationContext().getSharedPreferences("myToken", Context.MODE_PRIVATE)
+                val token = sp.getString("token", "").toString()
+                val username = sp.getString("username", "").toString()
+
                 val formBody = inputData?.let { it1 -> RequestBody.create(MEDIA_TYPE, it1) }?.let { it2 ->
                     MultipartBody.Builder().setType(MultipartBody.FORM)
                             .addFormDataPart("file", file_name, it2)
                             .addFormDataPart("actual_file_name", actual_filename)
                             .addFormDataPart("user_file_name", file_name)
+                            .addFormDataPart("username", username)
+                            .addFormDataPart("token", token)
                             .build()
                 };
 
@@ -138,7 +205,7 @@ class MainActivity2 : AppCompatActivity(){
 
                 val slowClient = client.newBuilder()
                         .readTimeout(1, TimeUnit.MINUTES)
-                        .connectTimeout(1,TimeUnit.MINUTES)
+                        .connectTimeout(1, TimeUnit.MINUTES)
                         .writeTimeout(1, TimeUnit.MINUTES)
                         .build()
 
@@ -153,6 +220,8 @@ class MainActivity2 : AppCompatActivity(){
 
                             if (json.getString("result") == "Filename alteady exists") {
                                 runOnUiThread {
+                                    download_button.visibility = View.VISIBLE
+                                    logout_button.visibility = View.VISIBLE
                                     filename_status.text = json.getString("result")
                                     upload_button.visibility = View.VISIBLE
                                     cut_button.visibility = View.VISIBLE
@@ -161,6 +230,8 @@ class MainActivity2 : AppCompatActivity(){
                                 }
                             } else {
                                 runOnUiThread {
+                                    download_button.visibility = View.VISIBLE
+                                    logout_button.visibility = View.VISIBLE
                                     file_size_status.visibility = View.INVISIBLE
                                     filename_status.text = json.getString("result")
                                     upload_button.visibility = View.VISIBLE
@@ -169,6 +240,8 @@ class MainActivity2 : AppCompatActivity(){
                             }
                         } catch (e: JSONException) {
                             runOnUiThread {
+                                download_button.visibility = View.VISIBLE
+                                logout_button.visibility = View.VISIBLE
                                 filename_status.text = "Server is down, Please try later!"
                                 upload_button.visibility = View.VISIBLE
                                 cut_button.visibility = View.VISIBLE
@@ -183,6 +256,8 @@ class MainActivity2 : AppCompatActivity(){
                         println("Failed to execute request!")
                         println(e)
                         runOnUiThread {
+                            download_button.visibility = View.VISIBLE
+                            logout_button.visibility = View.VISIBLE
                             filename_status.text = ""
                             file_size_status.visibility = View.VISIBLE
                             file_size_status.text = "Please check your Internet and try again!"
@@ -195,7 +270,9 @@ class MainActivity2 : AppCompatActivity(){
                     }
                 })
 
+                download_button.visibility = View.INVISIBLE
                 filename_status.text = "UPLOADING..."
+                logout_button.visibility = View.INVISIBLE
                 cut_button.visibility = View.INVISIBLE
                 image_selected.visibility = View.INVISIBLE
                 filename.visibility = View.INVISIBLE

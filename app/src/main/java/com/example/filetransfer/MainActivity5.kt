@@ -1,27 +1,26 @@
 package com.example.filetransfer
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import okhttp3.*
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import kotlin.system.exitProcess
 
-class MainActivity : AppCompatActivity() {
+class MainActivity5 : AppCompatActivity() {
 
     override fun onBackPressed() {
         println("hello")
 
-        val builder: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
+        val builder: android.app.AlertDialog.Builder = android.app.AlertDialog.Builder(this@MainActivity5 )
         builder.setMessage("Do you want to exit ?");
         builder.setTitle("Alert !");
         builder.setCancelable(false);
@@ -40,41 +39,41 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_main5)
 
-        val sp: SharedPreferences = getApplicationContext().getSharedPreferences("myToken" , Context.MODE_PRIVATE)
-        if(sp.getString("token","") != ""){
-            val intent = Intent(this, MainActivity4::class.java)
+        val username: EditText = findViewById(R.id.editTextTextPersonName2)
+        val password: EditText = findViewById(R.id.editTextTextPassword2)
+        val confirm_password: EditText = findViewById(R.id.editTextTextPassword3)
+        val status: TextView = findViewById(R.id.textView6)
+        val register_button: Button = findViewById(R.id.button6)
+        val already_a_user: Button = findViewById(R.id.button8)
+
+        already_a_user.setOnClickListener {
+            var intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
 
-        val username : EditText = findViewById(R.id.editTextTextPersonName)
-        val password : EditText = findViewById(R.id.editTextTextPassword)
-        val status : TextView = findViewById(R.id.textView5)
-        val login_button : Button = findViewById(R.id.button5)
-        val new_user : Button = findViewById(R.id.button7)
-
-        new_user.setOnClickListener {
-            val intent = Intent(this, MainActivity5::class.java)
-            startActivity(intent)
-        }
-
-        login_button.setOnClickListener {
-            if(username.getText().toString() == "" || password.getText().toString() == ""){
+        register_button.setOnClickListener {
+            if(username.getText().toString() == "" || password.getText().toString() == "" || confirm_password.getText().toString() == ""){
                 status.text = "Please enter the Credentials First!!"
                 status.visibility = View.VISIBLE
             }
+            else if(password.getText().toString() != confirm_password.getText().toString()){
+                status.text = "Passwords didn't match, please check again!"
+                status.visibility = View.VISIBLE
+            }
             else{
-                // write login code here
+                //write code to register here
 
                 username.visibility = View.INVISIBLE
                 password.visibility = View.INVISIBLE
-                login_button.visibility = View.INVISIBLE
-                new_user.visibility = View.INVISIBLE
+                confirm_password.visibility = View.INVISIBLE
+                register_button.visibility = View.INVISIBLE
+                already_a_user.visibility = View.INVISIBLE
                 status.text = "LOADING..."
                 status.visibility = View.VISIBLE
 
-                var url = "http://0318185579a5.ngrok.io/login"
+                var url = "http://0318185579a5.ngrok.io/register"
                 var formBody = FormBody.Builder()
                     .add("username", username.getText().toString())
                     .add("password", password.getText().toString())
@@ -94,28 +93,33 @@ class MainActivity : AppCompatActivity() {
 
                             if(result2 == "no"){
                                 runOnUiThread {
+                                    status.text = result1
                                     username.setText("")
                                     password.setText("")
+                                    confirm_password.setText("")
                                     username.visibility = View.VISIBLE
                                     password.visibility = View.VISIBLE
-                                    login_button.visibility = View.VISIBLE
-                                    new_user.visibility = View.VISIBLE
-                                    status.text = result1
+                                    confirm_password.visibility = View.VISIBLE
+                                    register_button.visibility = View.VISIBLE
+                                    already_a_user.visibility = View.VISIBLE
+                                }
+                            }else{
+                                runOnUiThread {
+                                    val builder: android.app.AlertDialog.Builder = android.app.AlertDialog.Builder(this@MainActivity5 )
+                                    builder.setMessage("Please login now..");
+                                    builder.setTitle("Registered Successfully!");
+                                    builder.setCancelable(false);
+
+                                    builder.setPositiveButton("OK") { dialog, which ->
+                                        var intent = Intent(this@MainActivity5,MainActivity::class.java)
+                                        startActivity(intent)
+                                    }
+
+                                    val alertDialog = builder.create()
+                                    alertDialog.show()
                                 }
                             }
-                            else{
-                                var token = json.getString("token")
 
-                                val sharedPreferences : SharedPreferences = getSharedPreferences("myToken" , Context.MODE_PRIVATE)
-                                val editor : SharedPreferences.Editor = sharedPreferences.edit()
-                                editor.putString("token" , token)
-                                editor.putString("username" , username.getText().toString())
-                                editor.commit()
-
-                                val intent = Intent(this@MainActivity, MainActivity4::class.java)
-                                startActivity(intent)
-
-                            }
 
                         } catch (e: JSONException) {
                             println("Failed to execute request!")
@@ -124,8 +128,9 @@ class MainActivity : AppCompatActivity() {
                                 status.text = "Server is down, Please try later!"
                                 username.visibility = View.VISIBLE
                                 password.visibility = View.VISIBLE
-                                login_button.visibility = View.VISIBLE
-                                new_user.visibility = View.VISIBLE
+                                confirm_password.visibility = View.VISIBLE
+                                register_button.visibility = View.VISIBLE
+                                already_a_user.visibility = View.VISIBLE
                             }
                         }
                     }
@@ -137,13 +142,12 @@ class MainActivity : AppCompatActivity() {
                             status.text = "Please check your Internet and try again!"
                             username.visibility = View.VISIBLE
                             password.visibility = View.VISIBLE
-                            login_button.visibility = View.VISIBLE
-                            new_user.visibility = View.VISIBLE
+                            confirm_password.visibility = View.VISIBLE
+                            register_button.visibility = View.VISIBLE
+                            already_a_user.visibility = View.VISIBLE
                         }
                     }
                 })
-
-
 
                 //
             }
