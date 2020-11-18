@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import kotlin.system.exitProcess
 
@@ -37,7 +38,7 @@ class MainActivity4 : AppCompatActivity() {
 
         val upload_button : Button = findViewById(R.id.button1)
         val download_button : Button = findViewById(R.id.button2)
-        val logout_button : Button = findViewById(R.id.button9)
+        val logout_button : ImageButton = findViewById(R.id.imageButton2)
 
 //        val sp: SharedPreferences = getApplicationContext().getSharedPreferences("myToken" , Context.MODE_PRIVATE)
 //        if(sp.getString("token","") == ""){

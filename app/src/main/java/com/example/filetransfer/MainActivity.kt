@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
                 status.text = "LOADING..."
                 status.visibility = View.VISIBLE
 
-                var url = "http://0318185579a5.ngrok.io/login"
+                var url = "http://c9084a47d38f.ngrok.io/login"
                 var formBody = FormBody.Builder()
                     .add("username", username.getText().toString())
                     .add("password", password.getText().toString())

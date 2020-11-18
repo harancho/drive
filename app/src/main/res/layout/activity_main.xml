@@ -7,7 +7,8 @@
     android:addStatesFromChildren="false"
     android:alwaysDrawnWithCache="false"
     android:animateLayoutChanges="false"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:background="@drawable/background_1">
 
     <Button
         android:id="@+id/button5"
@@ -16,6 +17,7 @@
         android:layout_marginBottom="144dp"
         android:text="Login"
         android:textSize="30sp"
+        app:backgroundTint="#30322E"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
@@ -25,13 +27,15 @@
         android:id="@+id/editTextTextPersonName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="76dp"
+        android:layout_marginTop="100dp"
         android:ems="10"
         android:hint="Username"
         android:inputType="textPersonName"
+        android:textColor="#FAF7F6"
+        android:textColorHint="#656363"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintHorizontal_bias="0.511"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -39,13 +43,15 @@
         android:id="@+id/editTextTextPassword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="84dp"
+        android:layout_marginTop="40dp"
         android:ems="10"
         android:hint="Password"
         android:inputType="textPassword"
+        android:textColor="#FAF7F6"
+        android:textColorHint="#656363"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintHorizontal_bias="0.488"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextTextPersonName" />
 
@@ -56,6 +62,7 @@
         android:layout_marginBottom="48dp"
         android:text="New User!"
         android:textSize="24sp"
+        app:backgroundTint="#30322E"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -66,6 +73,7 @@
         android:layout_height="84dp"
         android:layout_marginBottom="100dp"
         android:gravity="center"
+        android:textColor="#FAF7F6"
         android:textSize="24sp"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/button5"

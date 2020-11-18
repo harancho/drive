@@ -47,15 +47,15 @@ class MainActivity3 : AppCompatActivity() {
         setContentView(R.layout.activity_main3)
 
         val user : TextView = findViewById(R.id.textView7)
-        val upload_button : Button = findViewById(R.id.button12)
-        val logout_button : Button = findViewById(R.id.button11)
+        val home_button : ImageButton = findViewById(R.id.imageButton4)
+        val logout_button : ImageButton = findViewById(R.id.imageButton5)
         val download_button : Button = findViewById(R.id.button4)
         val filename_status : TextView = findViewById(R.id.textView3)
         val list :ListView = findViewById(R.id.listView)
         val heading : TextView = findViewById(R.id.textView2)
         val testing_image : ImageView = findViewById(R.id.imageView2)
 
-        upload_button.setOnClickListener {
+        home_button.setOnClickListener {
             val intent = Intent(this, MainActivity4::class.java)
             startActivity(intent)
         }
@@ -93,7 +93,7 @@ class MainActivity3 : AppCompatActivity() {
         var adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mobileArray)
         list.adapter = adapter
 
-        var url = "http://0318185579a5.ngrok.io/filenames"
+        var url = "http://c9084a47d38f.ngrok.io/filenames"
         var formBody = FormBody.Builder()
                 .add("username" , sp.getString("username", "").toString())
                 .add("token", sp.getString("token" ,"").toString())
@@ -110,6 +110,12 @@ class MainActivity3 : AppCompatActivity() {
                     val json = JSONObject(body)
                     var result = json.getJSONArray("result")
                     println(result)
+
+                    if(result.length() == 0){
+                        runOnUiThread {
+                            heading.text = "No Files Available"
+                        }
+                    }
 
                     for (i in 0 until result.length()) {
                         var filename = result.getString(i)
@@ -164,7 +170,7 @@ class MainActivity3 : AppCompatActivity() {
                 filename2 = filename.text.toString()
                 // write code for downloading here
 
-                var url = "http://0318185579a5.ngrok.io/download"
+                var url = "http://c9084a47d38f.ngrok.io/download"
                 var formBody = FormBody.Builder()
                         .add("filename", filename_status.text.toString())
                         .add("token", sp.getString("token","").toString())
@@ -185,7 +191,7 @@ class MainActivity3 : AppCompatActivity() {
                                 val bitmap: Bitmap = BitmapFactory.decodeByteArray(body, 0, body?.size?.toInt())
                                 testing_image.setImageBitmap(bitmap)
                                 testing_image.visibility = View.VISIBLE
-                                upload_button.visibility = View.VISIBLE
+                                home_button.visibility = View.VISIBLE
                                 logout_button.visibility = View.VISIBLE
                                 files.visibility = View.VISIBLE
                                 heading.visibility = View.VISIBLE
@@ -194,7 +200,7 @@ class MainActivity3 : AppCompatActivity() {
 
                                 // write code to save file in pc here
 
-                                val filepath : File = File(getExternalFilesDir(null),"/FileTransferApp/")
+                                val filepath : File = File(getExternalFilesDir(null),"/DriveApp/")
                                 if(!filepath.exists()){
                                     filepath.mkdir()
                                 }
@@ -214,7 +220,7 @@ class MainActivity3 : AppCompatActivity() {
                             } catch (e: NullPointerException) {
                                 println("Failed to execute request!")
                                 println(e)
-                                upload_button.visibility = View.VISIBLE
+                                home_button.visibility = View.VISIBLE
                                 logout_button.visibility = View.VISIBLE
                                 heading.visibility = View.VISIBLE
                                 files.visibility = View.VISIBLE
@@ -231,7 +237,7 @@ class MainActivity3 : AppCompatActivity() {
                         println(e)
                         runOnUiThread {
                             logout_button.visibility = View.VISIBLE
-                            upload_button.visibility = View.VISIBLE
+                            home_button.visibility = View.VISIBLE
                             heading.visibility = View.VISIBLE
                             files.visibility = View.VISIBLE
                             download_button.visibility = View.VISIBLE
@@ -243,7 +249,7 @@ class MainActivity3 : AppCompatActivity() {
                 })
 
                 logout_button.visibility = View.INVISIBLE
-                upload_button.visibility = View.INVISIBLE
+                home_button.visibility = View.INVISIBLE
                 heading.text = "Available Files"
                 heading.visibility = View.INVISIBLE
                 files.visibility = View.INVISIBLE

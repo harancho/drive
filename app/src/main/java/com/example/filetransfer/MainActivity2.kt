@@ -9,10 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import okhttp3.*
@@ -109,8 +106,8 @@ class MainActivity2 : AppCompatActivity(){
         setContentView(R.layout.activity_main2)
 
         val user : TextView = findViewById(R.id.textView8)
-        val download_button : Button = findViewById(R.id.button13)
-        val logout_button : Button = findViewById(R.id.button10)
+        val home_button : ImageButton = findViewById(R.id.imageButton)
+        val logout_button : ImageButton = findViewById(R.id.imageButton3)
         val upload_button : Button = findViewById(R.id.button)
         val cut_button : Button = findViewById(R.id.button3)
         val image_selected : ImageView = findViewById(R.id.imageView)
@@ -121,7 +118,7 @@ class MainActivity2 : AppCompatActivity(){
         val sp: SharedPreferences = getApplicationContext().getSharedPreferences("myToken", Context.MODE_PRIVATE)
         user.text = sp.getString("username", "").toString()
 
-        download_button.setOnClickListener {
+        home_button.setOnClickListener {
             var intent = Intent(this, MainActivity4::class.java)
             startActivity(intent)
         }
@@ -178,7 +175,7 @@ class MainActivity2 : AppCompatActivity(){
             else{
 
                 val file_name = filename.getText().toString()
-                val url = "http://0318185579a5.ngrok.io/upload"
+                val url = "http://c9084a47d38f.ngrok.io/upload"
 
                 val MEDIA_TYPE = "image/*".toMediaType()
 
@@ -220,7 +217,7 @@ class MainActivity2 : AppCompatActivity(){
 
                             if (json.getString("result") == "Filename alteady exists") {
                                 runOnUiThread {
-                                    download_button.visibility = View.VISIBLE
+                                    home_button.visibility = View.VISIBLE
                                     logout_button.visibility = View.VISIBLE
                                     filename_status.text = json.getString("result")
                                     upload_button.visibility = View.VISIBLE
@@ -230,7 +227,7 @@ class MainActivity2 : AppCompatActivity(){
                                 }
                             } else {
                                 runOnUiThread {
-                                    download_button.visibility = View.VISIBLE
+                                    home_button.visibility = View.VISIBLE
                                     logout_button.visibility = View.VISIBLE
                                     file_size_status.visibility = View.INVISIBLE
                                     filename_status.text = json.getString("result")
@@ -240,7 +237,7 @@ class MainActivity2 : AppCompatActivity(){
                             }
                         } catch (e: JSONException) {
                             runOnUiThread {
-                                download_button.visibility = View.VISIBLE
+                                home_button.visibility = View.VISIBLE
                                 logout_button.visibility = View.VISIBLE
                                 filename_status.text = "Server is down, Please try later!"
                                 upload_button.visibility = View.VISIBLE
@@ -256,7 +253,7 @@ class MainActivity2 : AppCompatActivity(){
                         println("Failed to execute request!")
                         println(e)
                         runOnUiThread {
-                            download_button.visibility = View.VISIBLE
+                            home_button.visibility = View.VISIBLE
                             logout_button.visibility = View.VISIBLE
                             filename_status.text = ""
                             file_size_status.visibility = View.VISIBLE
@@ -270,7 +267,7 @@ class MainActivity2 : AppCompatActivity(){
                     }
                 })
 
-                download_button.visibility = View.INVISIBLE
+                home_button.visibility = View.INVISIBLE
                 filename_status.text = "UPLOADING..."
                 logout_button.visibility = View.INVISIBLE
                 cut_button.visibility = View.INVISIBLE
